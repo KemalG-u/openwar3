@@ -458,6 +458,8 @@ export function registerEventNatives(rt: Runtime): void {
   };
   def(rt, "ConditionalTriggerExecute", (c, a) => {
     const t = trig(c, a[0]);
+    // Issue #295 cites Scripts/Blizzard.j's ConditionalTriggerExecute:
+    // explicitly running a trigger checks its conditions, not its enabled state.
     if (t) asTrigger(c, t, () => conditionsPass(c, t) && (runActions(c, t), true));
     return JNULL;
   });

@@ -1028,6 +1028,8 @@ export class Interpreter {
     if (!t) return JNULL;
     this.rt.eventStack.push(new Map([["TriggeringTrigger", jHandle(t.handleId, "trigger")]]));
     try {
+      // Issue #295 cites Scripts/Blizzard.j's ConditionalTriggerExecute:
+      // explicitly running a trigger checks its conditions, not its enabled state.
       if (name === "ConditionalTriggerExecute" && !this.conditionsPass(t)) return JNULL;
       // `adoptWaits` is the whole rule: run it here, and hand the rest to the scheduler if it
       // sleeps. Note this makes the statement form behave exactly like the EXPRESSION form
