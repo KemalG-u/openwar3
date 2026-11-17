@@ -1,0 +1,50 @@
+# CI-only test branch: do not include this workflow in the upstream contribution.
+# Checkout is pinned to the test-only commit; no production patch is present.
+name: Openwar3 295 RED only
+
+on:
+  push:
+    branches: [ci/openwar3-295-red]
+
+permissions:
+  contents: read
+
+jobs:
+  red:
+    if: github.repository == 'KemalG-u/openwar3' && github.event.repository.private == false && github.event.repository.fork == true
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Check out the reviewed RED snapshot
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: KemalG-u/openwar3
+          ref: fab4302184a77504dbff97cc2ee96ac24a9afea0
+          fetch-depth: 1
+          persist-credentials: false
+          clean: false
+          submodules: false
+          lfs: false
+
+      - name: Set up the repository's Node major
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+          package-manager-cache: false
+
+      - name: Install the pinned pnpm tool without lifecycle scripts
+        run: |
+          npm install --prefix "$RUNNER_TEMP/pnpm-tools" --ignore-scripts --no-audit --no-fund pnpm@10.33.1
+          echo "$RUNNER_TEMP/pnpm-tools/node_modules/.bin" >> "$GITHUB_PATH"
+
+      - name: Install locked dependencies without lifecycle scripts
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Compile the headless JASS runtime
+        run: pnpm exec tsc -p tools/tsconfig.jass.json
+
+      - name: Run the regression test (expected to fail for issue 295)
+        run: node tools/jass-conditional-trigger-test.cjs
