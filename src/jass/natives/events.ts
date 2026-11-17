@@ -458,7 +458,7 @@ export function registerEventNatives(rt: Runtime): void {
   };
   def(rt, "ConditionalTriggerExecute", (c, a) => {
     const t = trig(c, a[0]);
-    if (t && t.enabled) asTrigger(c, t, () => conditionsPass(c, t) && (runActions(c, t), true));
+    if (t) asTrigger(c, t, () => conditionsPass(c, t) && (runActions(c, t), true));
     return JNULL;
   });
   def(rt, "TriggerExecute", (c, a) => {

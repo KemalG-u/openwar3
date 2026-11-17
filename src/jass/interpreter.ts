@@ -1028,7 +1028,7 @@ export class Interpreter {
     if (!t) return JNULL;
     this.rt.eventStack.push(new Map([["TriggeringTrigger", jHandle(t.handleId, "trigger")]]));
     try {
-      if (name === "ConditionalTriggerExecute" && !(t.enabled && this.conditionsPass(t))) return JNULL;
+      if (name === "ConditionalTriggerExecute" && !this.conditionsPass(t)) return JNULL;
       // `adoptWaits` is the whole rule: run it here, and hand the rest to the scheduler if it
       // sleeps. Note this makes the statement form behave exactly like the EXPRESSION form
       // (`if TriggerExecuteBJ(…)`), which has adopted since the campaign trigger queue needed
