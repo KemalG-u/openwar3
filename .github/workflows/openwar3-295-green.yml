@@ -1,0 +1,50 @@
+# CI-only branch: do not include this workflow in the upstream contribution.
+# Checkout is pinned to the clean contribution commit, without CI-only files.
+name: Openwar3 295 GREEN
+
+on:
+  push:
+    branches: [ci/openwar3-295-green]
+
+permissions:
+  contents: read
+
+jobs:
+  green:
+    if: github.repository == 'KemalG-u/openwar3' && github.event.repository.private == false && github.event.repository.fork == true
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Check out the reviewed contribution snapshot
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: KemalG-u/openwar3
+          ref: a2180960668f026ee9430201e66bb10563814558
+          fetch-depth: 1
+          persist-credentials: false
+          clean: false
+          submodules: false
+          lfs: false
+
+      - name: Set up the repository's Node major
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+          package-manager-cache: false
+
+      - name: Install the pinned pnpm tool without lifecycle scripts
+        run: |
+          npm install --prefix "$RUNNER_TEMP/pnpm-tools" --ignore-scripts --no-audit --no-fund pnpm@10.33.1
+          echo "$RUNNER_TEMP/pnpm-tools/node_modules/.bin" >> "$GITHUB_PATH"
+
+      - name: Install locked dependencies without lifecycle scripts
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Compile the headless JASS runtime
+        run: pnpm exec tsc -p tools/tsconfig.jass.json
+
+      - name: Run the disabled-trigger regression checks
+        run: node tools/jass-conditional-trigger-test.cjs
